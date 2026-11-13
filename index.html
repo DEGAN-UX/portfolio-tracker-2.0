@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio returns</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0 auto; padding: 1rem; max-width: 1400px; color: #1a1a1a; }
+  h1 { font-size: 1.4rem; } h2 { font-size: 1.15rem; margin-top: 2rem; }
+  label { display: block; margin: .5rem 0; font-weight: 600; }
+  input[type=file] { display: block; margin-top: .25rem; font-weight: normal; }
+  button { font-size: 1rem; padding: .5rem 1rem; margin: .25rem .25rem .25rem 0; cursor: pointer; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .75rem; }
+  .card { border: 1px solid #ccc; border-radius: 8px; padding: .75rem; }
+  .card .big { font-size: 1.3rem; font-weight: 700; }
+  .card small { display: block; color: #555; margin-top: .25rem; }
+  .scroll { overflow-x: auto; }
+  /* overflow on the wrapper makes it the sticky container, so it must also scroll vertically */
+  .table-wrap { overflow: auto; max-height: calc(100vh - 1rem); }
+  thead th { z-index: 1; }
+  table { border-collapse: collapse; width: 100%; font-size: .72rem; }
+  th, td { padding: .35rem .5rem; border-bottom: 1px solid #ddd; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 12rem; }
+  thead th { background: #f3f3f3; position: sticky; top: 0; }
+  #table tbody td:first-child, #table tbody th { padding-left: .8rem; }
+  tr.group th, tr.group td { background: #dfe6f0; font-size: .85rem; font-weight: 700; border-top: 2px solid #999; }
+  tr.sector th, tr.sector td { background: #f3f3f3; font-weight: 600; }
+  /* row background shows through the transparent part of the bar gradients in cells */
+  #table tbody tr:hover { background: #fff7d1; }
+  #table tbody tr.group:hover > *, #table tbody tr.sector:hover > * { background: #fff0b3; }
+  .view-toggle { border: none; padding: 0; margin: 1rem 0 .5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .view-toggle legend { float: left; font-weight: 600; margin-right: .5rem; }
+  .view-toggle label { display: inline-flex; gap: .3rem; margin: 0; font-weight: normal; }
+  .legend { font-size: .8rem; margin-bottom: .5rem; }
+  .legend div { margin: .2rem 0; }
+  .legend .key { display: inline-flex; align-items: center; gap: .3rem; margin-right: .9rem; white-space: nowrap; }
+  .legend .swatch { width: 5px; height: 1.1em; display: inline-block; }
+  .chart-card { margin-top: 2rem; border: 1px solid #e3e6ea; border-radius: 12px; padding: 1rem 1rem .5rem; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+  .chart-card h2 { margin: 0 0 .25rem; }
+  .chart-keys { font-size: .85rem; display: flex; gap: 1.25rem; flex-wrap: wrap; margin-bottom: .5rem; }
+  .chart-keys span::before { content: ''; display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: .4rem; background: var(--c); }
+  #chart { position: relative; touch-action: pan-y; }
+  #chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  #chart svg:focus { outline: 2px solid #4a6fa5; outline-offset: 4px; border-radius: 4px; }
+  #chart .axis text { font-size: 11px; fill: #6b7280; }
+  #chart .grid line { stroke: #eceff3; }
+  .tip { position: absolute; pointer-events: none; background: rgba(17,24,39,.94); color: #fff; font-size: .78rem; line-height: 1.4;
+    padding: .5rem .65rem; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.25); white-space: nowrap; transform: translate(-50%, calc(-100% - 12px)); }
+  .tip b { font-size: .85rem; } .tip .muted { color: #cbd5e1; } .tip .inv { color: #7cc0f5; } .tip .val { color: #f5c25b; }
+  tfoot td { font-weight: 700; border-top: 2px solid #999; }
+  .pos { color: #0a6b2d; } .neg { color: #b00020; }
+  .note { background: #f6f8fa; border-left: 4px solid #4a6fa5; padding: .5rem .75rem; }
+  .warn { background: #fff4e5; border-left: 4px solid #c77700; padding: .5rem .75rem; }
+  .error { background: #fde8e8; border-left: 4px solid #b00020; padding: .5rem .75rem; }
+  [hidden] { display: none !important; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .dropzone { display: block; border: 2px dashed #4a6fa5; border-radius: 10px; padding: 1.5rem; text-align: center; cursor: pointer; font-weight: normal; background: #f8faff; }
+  .dropzone:focus-within, .dropzone.over { background: #e3ecfa; outline: 3px solid #4a6fa5; }
+  .dropzone strong { font-size: 1.1rem; }
+  .loaded { list-style: none; padding: 0; } .loaded li { margin: .25rem 0; }
+  .history { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+  .history li { display: flex; }
+  .history button { margin: 0; text-align: left; border: 1px solid #4a6fa5; background: #fff; border-radius: 6px 0 0 6px; }
+  .history button.del { border-radius: 0 6px 6px 0; border-left: none; padding: .5rem .6rem; color: #b00020; }
+  .history button[aria-current="true"] { background: #4a6fa5; color: #fff; }
+  .history small { display: block; }
+  details { margin-top: 1rem; }
+</style>
+</head>
+<body>
+<h1>Portfolio returns (CHF)</h1>
+
+<section aria-labelledby="import-h">
+  <h2 id="import-h">1. Import DEGIRO CSV exports</h2>
+  <label class="dropzone" id="dropzone">
+    <strong>Drop both CSV files here</strong><br>
+    or tap to choose them (you can select both at once)<br>
+    <small>Account statement (from your first purchase) + Portfolio. The app recognises which is which.</small>
+    <input type="file" id="fileInput" class="sr-only" accept=".csv,text/csv" multiple>
+  </label>
+  <ul class="loaded" id="loaded"></ul>
+  <button id="calcBtn" disabled>Recalculate</button>
+  <p id="status" role="status" aria-live="polite"></p>
+</section>
+
+<section aria-labelledby="snap-h">
+  <h2 id="snap-h">History</h2>
+  <p><small>A snapshot is saved automatically each time you import files (one per day). Tap a date to view it.</small></p>
+  <div id="snapshots"></div>
+  <details>
+    <summary>Backup / move history to another device</summary>
+    <button id="exportBtn">Export history (JSON)</button>
+    <label>Import history (JSON)
+      <input type="file" id="importFile" accept=".json,application/json">
+    </label>
+  </details>
+</section>
+
+<section id="results" hidden aria-labelledby="results-h">
+  <h2 id="results-h">2. Results <span id="resultDate"></span></h2>
+  <p id="fxInfo"></p>
+  <div id="warnings"></div>
+  <div class="cards" id="cards"></div>
+  <p class="note">
+    <strong>What "total return" includes:</strong> price gain (today's value + sale proceeds − purchase cost)
+    <strong>plus dividends and fund distributions</strong> (after withholding tax), <strong>minus trading fees</strong>.
+    Purchases and income are converted to CHF at the rate DEGIRO actually used; today's value uses today's ECB rate.
+    "Annualised" is the money-weighted yearly return (XIRR); it is not shown for holdings bought less than a year ago.
+  </p>
+  <button id="backBtn" hidden>Back to today's figures</button>
+  <fieldset class="view-toggle">
+    <legend>Order:</legend>
+    <label><input type="radio" name="groupMode" value="alpha"> Alphabetical</label>
+    <label><input type="radio" name="groupMode" value="sector"> By sector</label>
+  </fieldset>
+  <div class="legend" id="legend"></div>
+  <div class="table-wrap"><table id="table"></table></div>
+  <div class="chart-card">
+    <h2>Invested money vs portfolio value</h2>
+    <div class="chart-keys"><span style="--c:#0072B2">Net invested (purchases + fees − sales)</span><span style="--c:#E69F00">Portfolio value (from your snapshots)</span></div>
+    <div id="chart"></div>
+    <p><small>Hover, drag or use the arrow keys for details. DEGIRO's files only contain today's prices, so the value line has one point per snapshot and fills in as you keep importing.</small></p>
+  </div>
+</section>
+
+<script src="calc.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const STORE = 'portfolioSnapshots';
+let current = null;
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const chf = x => x == null ? '—' : x.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = x => x == null ? '—' : (x * 100).toLocaleString('de-CH', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %';
+const sign = x => x == null ? '' : x >= 0 ? 'pos' : 'neg';
+const signed = (x, fmt) => `<span class="${sign(x)}">${x > 0 ? '+' : ''}${fmt(x)}</span>`;
+const day = t => new Date(t).toLocaleDateString('de-CH');
+
+async function fetchRates() {
+  try {
+    const res = await fetch('https://api.frankfurter.dev/v1/latest?base=CHF&symbols=EUR,GBP,USD');
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    return { ...data.rates, date: data.date };
+  } catch {
+    return null;
+  }
+}
+
+const loaded = { statement: null, portfolio: null };
+
+// Last-used CSVs are kept in IndexedDB (store "files", keys "statement" / "portfolio")
+const idb = (mode, fn) => new Promise((resolve, reject) => {
+  const open = indexedDB.open('portfolioApp', 1);
+  open.onupgradeneeded = () => open.result.createObjectStore('files');
+  open.onerror = () => reject(open.error);
+  open.onsuccess = () => {
+    const tx = open.result.transaction('files', mode);
+    const req = fn(tx.objectStore('files'));
+    tx.oncomplete = () => resolve(req.result);
+    tx.onerror = () => reject(tx.error);
+  };
+});
+
+function loadText(name, text, savedAt) {
+  try { loaded.statement = { name, text, savedAt, rows: Calc.parseStatement(text) }; return 'statement'; } catch {}
+  try { loaded.portfolio = { name, text, savedAt, data: Calc.parsePortfolio(text) }; return 'portfolio'; } catch {}
+  return null;
+}
+
+async function handleFiles(files) {
+  const errors = [];
+  for (const f of files) {
+    const text = await f.text();
+    const kind = loadText(f.name, text, Date.now());
+    if (!kind) { errors.push(`"${f.name}" is not a DEGIRO account statement or portfolio CSV.`); continue; }
+    idb('readwrite', s => s.put({ name: f.name, text, savedAt: loaded[kind].savedAt }, kind))
+      .catch(() => { $('status').innerHTML = '<span class="error">Could not store the file on this device; you will need to import it again next time.</span>'; });
+  }
+  renderLoaded();
+  $('status').innerHTML = errors.map(e => `<span class="error">${esc(e)}</span>`).join('<br>');
+  if (loaded.statement && loaded.portfolio && !errors.length) calculate(true);
+}
+
+async function restoreFiles() {
+  try {
+    for (const kind of ['statement', 'portfolio']) {
+      const f = await idb('readonly', s => s.get(kind));
+      if (f) loadText(f.name, f.text, f.savedAt);
+    }
+  } catch { return; }
+  renderLoaded();
+  if (loaded.statement && loaded.portfolio) calculate();
+}
+
+function renderLoaded() {
+  const s = loaded.statement, p = loaded.portfolio;
+  const range = s && s.rows.length ? `${day(Math.min(...s.rows.map(r => r.t)))} – ${day(Math.max(...s.rows.map(r => r.t)))}` : '';
+  const imported = f => f.savedAt ? `, imported ${day(f.savedAt)}` : '';
+  $('loaded').innerHTML = `
+    <li>${s ? `✓ Account statement: <strong>${esc(s.name)}</strong> (${range}${imported(s)})` : '✗ Account statement: not loaded yet'}</li>
+    <li>${p ? `✓ Portfolio: <strong>${esc(p.name)}</strong> (${p.data.holdings.length} holdings${imported(p)})` : '✗ Portfolio: not loaded yet'}</li>`;
+  $('calcBtn').disabled = !(s && p);
+}
+
+async function calculate(saveSnapshot) {
+  if (!loaded.statement || !loaded.portfolio) return;
+  $('status').textContent = 'Calculating…';
+  try {
+    const rates = await fetchRates();
+    current = Calc.compute(loaded.statement.rows, loaded.portfolio.data, rates);
+    if (saveSnapshot === true) {
+      const today = current.date.slice(0, 10);
+      storeSnapshots([current, ...loadSnapshots().filter(r => r.date.slice(0, 10) !== today)]);
+    }
+    render(current);
+    $('status').textContent = '';
+  } catch (e) {
+    $('status').innerHTML = `<span class="error">${esc(e.message)}</span>`;
+  }
+}
+
+function render(r, isSnapshot) {
+  const s = r.summary;
+  $('results').hidden = false;
+  $('resultDate').textContent = isSnapshot ? `— snapshot from ${day(r.date)}` : `(${day(r.date)})`;
+  $('backBtn').hidden = !isSnapshot || !loaded.statement || !loaded.portfolio;
+  viewing = isSnapshot ? r.date : null;
+  renderSnapshots();
+  $('fxInfo').textContent = r.todayRates
+    ? `Today's rates (ECB, ${r.todayRates.date}): 1 CHF = ${r.todayRates.EUR} EUR, ${r.todayRates.GBP} GBP, ${r.todayRates.USD} USD.`
+    : 'Could not load today\'s exchange rates (offline?). Using the CHF values from the DEGIRO portfolio file instead.';
+  $('warnings').innerHTML = r.warnings.map(w => `<p class="warn">${esc(w)}</p>`).join('');
+
+  $('cards').innerHTML = `
+    <div class="card">Value today<div class="big">${chf(s.value)} CHF</div><small>+ ${chf(s.cashChf)} CHF cash (not included in returns)</small></div>
+    <div class="card">Invested (purchases)<div class="big">${chf(s.bought)} CHF</div><small>${chf(s.sold)} CHF received from sales</small></div>
+    <div class="card">Total return<div class="big">${signed(s.totalReturn, chf)} CHF</div><small>${signed(s.totalReturnPct, pct)} of money invested</small></div>
+    <div class="card">Annualised return<div class="big">${signed(s.annualised, pct)}</div><small>Money-weighted, whole portfolio</small></div>
+    <div class="card">Breakdown<small>Price gain: ${signed(s.priceGain, chf)} CHF</small><small>Dividends after tax: ${signed(s.dividends, chf)} CHF</small><small>Fund distributions: ${signed(s.distributions, chf)} CHF</small><small>Trading fees: ${signed(-s.fees, chf)} CHF</small></div>
+    <div class="card">Spent on trading<div class="big">${chf(s.tradeFees)} CHF</div><small>Transaction fees, stamp duty, ADR fees</small><small>+ ${chf(s.connectionFees)} CHF yearly exchange connection fees (not tied to a product, not in returns)</small></div>`;
+
+  const head = `<thead><tr><th scope="col">Product</th><th scope="col">Annualised</th><th scope="col">Type</th><th scope="col">Units</th><th scope="col">First buy</th>
+    <th scope="col">Invested</th><th scope="col">Sold for</th><th scope="col">Value today</th><th scope="col">Price gain</th>
+    <th scope="col">Dividends (net)</th><th scope="col">Distributions</th><th scope="col">Fees</th>
+    <th scope="col">Total return</th><th scope="col">Total %</th></tr></thead>`;
+  const bestAnn = Math.max(0, ...r.products.map(p => p.annualised ?? 0));
+  const annBar = x => {
+    if (x == null || !bestAnn) return '';
+    const w = Math.min(100, Math.abs(x) / bestAnn * 100).toFixed(1);
+    return ` style="background: linear-gradient(to right, ${x >= 0 ? '#bcd4f6' : '#f6c6c6'} ${w}%, transparent ${w}%)"`;
+  };
+  const bestVal = Math.max(0, ...r.products.map(p => p.value));
+  const nameStyle = p => {
+    const w = p.value && bestVal ? (p.value / bestVal * 100).toFixed(1) : 0;
+    return ` style="box-shadow: inset 5px 0 0 ${Calc.sectorOf(p.isin, p.type).color}; background: linear-gradient(to right, #bcd4f6 ${w}%, transparent ${w}%)"`;
+  };
+  const row = p => `<tr>
+    <td${nameStyle(p)}>${esc(p.name)}${p.incomplete ? ' ⚠︎ <small>(incomplete history)</small>' : ''}${p.held ? '' : ' <small>(sold)</small>'}<br><small>${esc(p.isin)}</small></td>
+    <td${annBar(p.annualised)}>${p.annualised == null ? (p.yearsHeld < 1 ? '<small>&lt; 1 year</small>' : '—') : signed(p.annualised, pct)}</td>
+    <td>${p.type}</td><td>${p.qty || '—'}</td><td>${p.firstBuy ? day(p.firstBuy) : '—'}</td>
+    <td>${chf(p.bought)}</td><td>${p.sold ? chf(p.sold) : '—'}</td><td>${p.held ? chf(p.value) : '—'}</td>
+    <td>${signed(p.priceGain, chf)}</td><td>${chf(p.dividends)}</td><td>${chf(p.distributions)}</td><td>${chf(p.fees)}</td>
+    <td>${signed(p.totalReturn, chf)}</td><td>${signed(p.totalReturnPct, pct)}</td></tr>`;
+  const foot = `<tfoot><tr><td>Total</td><td>${signed(s.annualised, pct)}</td><td></td><td></td><td></td><td>${chf(s.bought)}</td><td>${chf(s.sold)}</td><td>${chf(s.value)}</td>
+    <td>${signed(s.priceGain, chf)}</td><td>${chf(s.dividends)}</td><td>${chf(s.distributions)}</td><td>${chf(s.fees)}</td>
+    <td>${signed(s.totalReturn, chf)}</td><td>${signed(s.totalReturnPct, pct)}</td></tr></tfoot>`;
+  const groupRow = (label, items, cls, color, total, ofWhat) => {
+    const sum = k => items.reduce((a, p) => a + p[k], 0);
+    const invested = sum('bought') + sum('fees');
+    const bar = color ? ` style="box-shadow: inset 5px 0 0 ${color}"` : '';
+    const share = (v, t, of) => `${pct(t ? v / t : null)} of ${of}`;
+    const parts = [items.length, share(sum('value'), total, ofWhat)];
+    if (ofWhat !== 'portfolio') parts.push(share(sum('value'), s.value, 'portfolio'));
+    return `<tr class="${cls}"><th scope="rowgroup"${bar}>${esc(label)} <small>(${parts.join(' · ')})</small></th>
+      <td></td><td></td><td></td><td></td><td>${chf(sum('bought'))}</td><td>${chf(sum('sold'))}</td><td>${chf(sum('value'))}</td>
+      <td>${signed(sum('priceGain'), chf)}</td><td>${chf(sum('dividends'))}</td><td>${chf(sum('distributions'))}</td><td>${chf(sum('fees'))}</td>
+      <td>${signed(sum('totalReturn'), chf)}</td><td>${signed(invested ? sum('totalReturn') / invested : null, pct)}</td></tr>`;
+  };
+  const bySector = groupMode() === 'sector';
+  let body = '';
+  const usedSectors = { shares: new Set(), funds: new Set() };
+  for (const [type, label, key] of [['Share', 'Shares', 'shares'], ['Fund', 'Funds', 'funds']]) {
+    const items = r.products.filter(p => p.type === type).sort((a, b) => a.name.localeCompare(b.name));
+    if (!items.length) continue;
+    items.forEach(p => usedSectors[key].add(Calc.sectorOf(p.isin, p.type)));
+    body += groupRow(label, items, 'group', null, s.value, 'portfolio');
+    if (!bySector) { body += items.map(row).join(''); continue; }
+    const groupValue = items.reduce((a, p) => a + p.value, 0);
+    for (const sec of [...Calc.SECTORS[key], Calc.UNASSIGNED]) {
+      const inSec = items.filter(p => Calc.sectorOf(p.isin, p.type) === sec);
+      if (inSec.length) body += groupRow(sec.name, inSec, 'sector', sec.color, groupValue, label.toLowerCase()) + inSec.map(row).join('');
+    }
+  }
+  const keys = (list, set) => [...list, Calc.UNASSIGNED].filter(x => set.has(x))
+    .map(x => `<span class="key"><span class="swatch" style="background:${x.color}"></span>${esc(x.name)}</span>`).join('');
+  $('legend').innerHTML = `<div><strong>Shares:</strong> ${keys(Calc.SECTORS.shares, usedSectors.shares)}</div>
+    <div><strong>Funds:</strong> ${keys(Calc.SECTORS.funds, usedSectors.funds)}</div>`;
+  $('table').innerHTML = `<caption class="sr-only">Return per product, all amounts in CHF</caption>${head}<tbody>${body}</tbody>${foot}`;
+  renderChart(r);
+}
+
+function renderChart(r) {
+  const box = $('chart');
+  const series = r.investedSeries;
+  if (!series || !series.length) { box.innerHTML = '<p>This snapshot was saved before history tracking existed.</p>'; return; }
+  const byDay = new Map();
+  for (const snap of [...loadSnapshots(), r]) {
+    if (snap.date <= r.date) byDay.set(snap.date.slice(0, 10), { t: Date.parse(snap.date), value: snap.summary.value });
+  }
+  const values = [...byDay.values()].sort((a, b) => a.t - b.t);
+  const investedAt = t => { let v = 0; for (const p of series) { if (p.t > t) break; v = p.invested; } return v; };
+
+  const W = Math.max(320, box.clientWidth), H = Math.round(Math.min(360, Math.max(220, W * 0.38)));
+  const m = { l: 52, r: 14, t: 14, b: 26 };
+  const t0 = series[0].t, t1 = Math.max(Date.parse(r.date), ...values.map(v => v.t));
+  const top = Math.max(...series.map(p => p.invested), ...values.map(v => v.value));
+  const step = [1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6].find(s => top / s <= 5) || 1e6;
+  const maxY = Math.ceil(top * 1.05 / step) * step;
+  const x = t => m.l + (t - t0) / (t1 - t0 || 1) * (W - m.l - m.r);
+  const y = v => m.t + (1 - v / maxY) * (H - m.t - m.b);
+  const k = v => v >= 1e6 ? (v / 1e6).toLocaleString('de-CH') + 'M' : Math.round(v / 1e3) + 'k';
+
+  let line = `M${x(t0)},${y(0)}`;
+  for (const p of series) line += `H${x(p.t)}V${y(p.invested)}`;
+  line += `H${x(t1)}`;
+  const area = `${line}V${y(0)}H${x(t0)}Z`;
+  const valueLine = values.map((v, i) => `${i ? 'L' : 'M'}${x(v.t)},${y(v.value)}`).join('');
+
+  let grid = '', xAxis = '';
+  for (let v = 0; v <= maxY; v += step) grid += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${k(v)}</text>`;
+  const months = W < 640 ? 12 : 6;
+  const d = new Date(t0); d.setUTCDate(1); d.setUTCMonth(Math.ceil((d.getUTCMonth() + 1) / months) * months);
+  for (; d.getTime() <= t1; d.setUTCMonth(d.getUTCMonth() + months)) {
+    xAxis += `<text x="${x(d.getTime())}" y="${H - 6}" text-anchor="middle">${d.toLocaleDateString('de-CH', { month: 'short', year: 'numeric', timeZone: 'UTC' })}</text>`;
+  }
+
+  const points = [...series.map(p => ({ t: p.t, inv: p })), ...values.map(v => ({ t: v.t, val: v }))].sort((a, b) => a.t - b.t);
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" tabindex="0" role="img"
+      aria-label="Net invested rose to ${chf(series[series.length - 1].invested)} CHF; latest portfolio value ${chf(values[values.length - 1].value)} CHF">
+    <defs><linearGradient id="invFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0072B2" stop-opacity=".28"/><stop offset="1" stop-color="#0072B2" stop-opacity="0"/></linearGradient></defs>
+    <g class="grid axis">${grid}</g><g class="axis">${xAxis}</g>
+    <path d="${area}" fill="url(#invFill)"/>
+    <path d="${line}" fill="none" stroke="#0072B2" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="${valueLine}" fill="none" stroke="#E69F00" stroke-width="2.5" stroke-linejoin="round"/>
+    ${values.map(v => `<circle cx="${x(v.t)}" cy="${y(v.value)}" r="4.5" fill="#E69F00" stroke="#fff" stroke-width="2"/>`).join('')}
+    <line id="guide" y1="${m.t}" y2="${H - m.b}" stroke="#9ca3af" stroke-dasharray="3 3" visibility="hidden"/>
+    <circle id="invDot" r="5" fill="#0072B2" stroke="#fff" stroke-width="2" visibility="hidden"/>
+    <circle id="valDot" r="6" fill="#E69F00" stroke="#fff" stroke-width="2" visibility="hidden"/>
+    <rect x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H}" fill="transparent"/>
+  </svg><div class="tip" hidden></div>`;
+
+  const svg = box.querySelector('svg'), tip = box.querySelector('.tip');
+  const show = i => {
+    const pt = points[i], inv = investedAt(pt.t), sx = box.clientWidth / W;
+    svg.querySelector('#guide').setAttribute('x1', x(pt.t)); svg.querySelector('#guide').setAttribute('x2', x(pt.t));
+    svg.querySelector('#guide').setAttribute('visibility', 'visible');
+    const invDot = svg.querySelector('#invDot'), valDot = svg.querySelector('#valDot');
+    invDot.setAttribute('cx', x(pt.t)); invDot.setAttribute('cy', y(inv)); invDot.setAttribute('visibility', 'visible');
+    valDot.setAttribute('visibility', pt.val ? 'visible' : 'hidden');
+    if (pt.val) { valDot.setAttribute('cx', x(pt.t)); valDot.setAttribute('cy', y(pt.val.value)); }
+    let html = `<b>${day(pt.t)}</b><br><span class="inv">●</span> Net invested: ${chf(inv)} CHF`;
+    if (pt.inv) {
+      const names = pt.inv.labels.slice(0, 3).map(esc).join('<br>') + (pt.inv.labels.length > 3 ? `<br>+ ${pt.inv.labels.length - 3} more` : '');
+      html += ` <span class="muted">(${pt.inv.delta >= 0 ? '+' : ''}${chf(pt.inv.delta)})</span>${names ? `<br><span class="muted">${names}</span>` : ''}`;
+    }
+    if (pt.val) {
+      const gain = pt.val.value - inv;
+      html += `<br><span class="val">●</span> Portfolio value: ${chf(pt.val.value)} CHF<br><span class="muted">Gain vs invested: ${gain >= 0 ? '+' : ''}${chf(gain)} CHF (${pct(inv ? gain / inv : null)})</span>`;
+    }
+    tip.innerHTML = html; tip.hidden = false;
+    const tx = x(pt.t) * sx, half = tip.offsetWidth / 2;
+    tip.style.left = Math.min(Math.max(tx, half), box.clientWidth - half) + 'px';
+    tip.style.top = Math.min(y(inv), pt.val ? y(pt.val.value) : Infinity) * sx + 'px';
+    svg.dataset.idx = i;
+  };
+  const hide = () => { tip.hidden = true; ['guide', 'invDot', 'valDot'].forEach(id => svg.querySelector('#' + id).setAttribute('visibility', 'hidden')); };
+  const nearest = clientX => {
+    const px = (clientX - svg.getBoundingClientRect().left) * W / svg.getBoundingClientRect().width;
+    let best = 0;
+    points.forEach((p, i) => { if (Math.abs(x(p.t) - px) < Math.abs(x(points[best].t) - px)) best = i; });
+    return best;
+  };
+  svg.addEventListener('pointermove', e => show(nearest(e.clientX)));
+  svg.addEventListener('pointerdown', e => show(nearest(e.clientX)));
+  svg.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hide(); });
+  svg.addEventListener('blur', hide);
+  svg.addEventListener('keydown', e => {
+    const cur = svg.dataset.idx == null ? points.length : +svg.dataset.idx;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); show(Math.max(0, cur - 1)); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); show(Math.min(points.length - 1, svg.dataset.idx == null ? 0 : cur + 1)); }
+    if (e.key === 'Escape') hide();
+  });
+}
+
+let resizeTimer;
+window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => current && renderChart(current), 150); });
+
+const groupMode = () => localStorage.getItem('groupMode') || 'alpha';
+document.querySelector(`input[name=groupMode][value=${groupMode()}]`).checked = true;
+document.querySelectorAll('input[name=groupMode]').forEach(el => el.addEventListener('change', () => {
+  localStorage.setItem('groupMode', el.value);
+  if (current) render(current, viewing === current.date);
+}));
+
+const loadSnapshots = () => JSON.parse(localStorage.getItem(STORE) || '[]');
+const storeSnapshots = list => { localStorage.setItem(STORE, JSON.stringify(list)); renderSnapshots(); };
+let viewing = null;
+
+function renderSnapshots() {
+  const list = loadSnapshots();
+  $('snapshots').innerHTML = list.length ? `<ul class="history">${list.map((r, i) => `<li>
+      <button data-view="${i}" aria-current="${r.date === viewing}">${day(r.date)}
+        <small>${chf(r.summary.value)} CHF · ${pct(r.summary.totalReturnPct)} · ${pct(r.summary.annualised)} p.a.</small></button>
+      <button class="del" data-del="${i}" aria-label="Delete snapshot from ${day(r.date)}">✕</button></li>`).join('')}</ul>`
+    : '<p>No snapshots yet. Import your files to create the first one.</p>';
+}
+
+$('snapshots').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const list = loadSnapshots();
+  if (btn.dataset.view) { current = list[+btn.dataset.view]; render(current, true); $('results').scrollIntoView(); }
+  if (btn.dataset.del && confirm(`Delete the snapshot from ${day(list[+btn.dataset.del].date)}?`)) { list.splice(+btn.dataset.del, 1); storeSnapshots(list); }
+});
+$('calcBtn').addEventListener('click', () => calculate());
+$('backBtn').addEventListener('click', () => calculate());
+$('fileInput').addEventListener('change', e => { handleFiles([...e.target.files]); e.target.value = ''; });
+// Accept drops anywhere on the page so a missed drop doesn't make the browser open the CSV
+window.addEventListener('dragover', e => { e.preventDefault(); $('dropzone').classList.add('over'); });
+window.addEventListener('dragleave', e => { if (!e.relatedTarget) $('dropzone').classList.remove('over'); });
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  $('dropzone').classList.remove('over');
+  const files = [...e.dataTransfer.files].filter(f => !/\.json$/i.test(f.name));
+  if (files.length) handleFiles(files);
+});
+$('exportBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(loadSnapshots(), null, 1)], { type: 'application/json' }));
+  a.download = `portfolio-snapshots-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+});
+$('importFile').addEventListener('change', async e => {
+  try {
+    const incoming = JSON.parse(await e.target.files[0].text());
+    if (!Array.isArray(incoming) || !incoming.every(r => r.date && r.summary && Array.isArray(r.products))) throw new Error('Not a snapshot export file.');
+    const list = loadSnapshots();
+    for (const r of incoming) if (!list.some(x => x.date === r.date)) list.push(r);
+    list.sort((a, b) => b.date.localeCompare(a.date));
+    storeSnapshots(list);
+    $('status').textContent = `Imported ${incoming.length} snapshot(s).`;
+  } catch (err) {
+    $('status').innerHTML = `<span class="error">${esc(err.message)}</span>`;
+  }
+  e.target.value = '';
+});
+renderSnapshots();
+renderLoaded();
+restoreFiles();
+</script>
+</body>
+</html>
