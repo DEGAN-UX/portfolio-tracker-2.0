@@ -10,13 +10,61 @@
 <meta name="theme-color" content="#0072B2">
 <style>
   body { font-family: system-ui, sans-serif; margin: 0 auto; padding: 1rem; max-width: 1400px; color: #1a1a1a; }
-  h1 { font-size: 1.4rem; } h2 { font-size: 1.15rem; margin-top: 2rem; }
+  .app-header { position: sticky; top: 0; z-index: 11; min-height: 50px; display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: .35rem 0; margin-bottom: 1rem; padding: .35rem 0 .55rem; border-bottom: 1px solid #e3e6ea; background: #fff; }
+  .brand { display: flex; align-items: center; gap: .65rem; color: inherit; text-decoration: none; }
+  .brand img { width: 36px; height: 36px; display: block; }
+  .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 650; }
+  .header-actions { display: flex; flex: 1; min-width: 0; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .35rem .45rem; margin-left: 64px; }
+  .app-nav { display: flex; flex-wrap: wrap; gap: .25rem; }
+  .app-nav a { display: inline-flex; align-items: center; min-height: 34px; padding: .25rem .65rem; border-radius: 6px; color: #174b72; font-size: .9rem; font-weight: 600; text-decoration: none; }
+  .app-nav a:hover, .app-nav a:focus-visible { background: #e8f1f8; outline-offset: 2px; }
+  .app-nav button.nav-link { display: inline-flex; align-items: center; min-height: 34px; margin: 0; padding: .25rem .65rem; border: 0; border-radius: 6px; background: transparent; color: #174b72; font-size: .9rem; font-weight: 600; }
+  .app-nav button.nav-link:hover, .app-nav button.nav-link:focus-visible { background: #e8f1f8; outline-offset: 2px; }
+  .app-nav .home-link { background: transparent; color: #174b72; font-weight: 700; }
+  .app-nav .home-link:hover, .app-nav .home-link:focus-visible { background: #e8f1f8; }
+  .rate-menu { position: relative; margin: 0; }
+  .rate-menu summary { display: inline-flex; align-items: center; min-height: 34px; padding: .25rem .65rem; border-radius: 6px; color: #174b72; font-size: .9rem; font-weight: 600; cursor: pointer; list-style: none; }
+  .rate-menu summary::-webkit-details-marker { display: none; }
+  .rate-menu summary::after { content: '⌄'; margin-left: .35rem; }
+  .rate-menu[open] summary, .rate-menu summary:hover, .rate-menu summary:focus-visible { background: #e8f1f8; outline-offset: 2px; }
+  .rate-menu-panel { position: absolute; z-index: 12; top: calc(100% + .25rem); right: 0; min-width: 10rem; padding: .3rem; border: 1px solid #d5dce3; border-radius: 7px; background: #fff; box-shadow: 0 5px 16px rgba(0,0,0,.14); }
+  .rate-menu-panel button { width: 100%; margin: 0; border: 0; border-radius: 4px; background: transparent; padding: .55rem .65rem; text-align: left; font-size: .9rem; }
+  .rate-menu-panel button:hover, .rate-menu-panel button:focus-visible { background: #e8f1f8; }
+  #ratesDialog { width: min(25rem, calc(100vw - 2rem)); box-sizing: border-box; padding: 1rem 1.1rem; border: 1px solid #d5dce3; border-radius: 10px; color: #1a1a1a; box-shadow: 0 12px 36px rgba(0,0,0,.2); }
+  #ratesDialog::backdrop { background: rgba(15, 23, 42, .38); }
+  #snapshotsDialog { width: min(38rem, calc(100vw - 2rem)); max-height: min(80vh, 45rem); box-sizing: border-box; overflow: auto; padding: 1rem 1.1rem; border: 1px solid #d5dce3; border-radius: 10px; color: #1a1a1a; box-shadow: 0 12px 36px rgba(0,0,0,.2); }
+  #snapshotsDialog::backdrop { background: rgba(15, 23, 42, .38); }
+  #snapshotsDialog .history { display: grid; grid-template-columns: 1fr; }
+  #snapshotsDialog .history li { width: 100%; }
+  #snapshotsDialog .history li > button:first-child { flex: 1; }
+  .history-backup { margin-top: 1rem; padding-top: .75rem; border-top: 1px solid #e3e6ea; }
+  .history-backup h3 { margin: 0 0 .5rem; font-size: 1rem; }
+  .dialog-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  .dialog-head h2 { margin: 0; }
+  .snapshot-date { margin: .2rem 0 .75rem; color: #5b6470; font-size: .9rem; }
+  .dialog-head button { margin: 0; padding: .2rem .55rem; border: 0; border-radius: 5px; background: #f0f3f6; font-size: 1.2rem; }
+  #ratesMeta { color: #515b66; margin: .85rem 0; }
+  #ratesDialog table { font-size: .95rem; }
+  #ratesDialog th, #ratesDialog td { padding: .55rem .4rem; }
+  #ratesDialog th:first-child, #ratesDialog td:first-child { min-width: 0; }
+  #ratesDialog th { text-align: left; }
+  #ratesDialog th:last-child, #ratesDialog td:last-child { text-align: right; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
   label { display: block; margin: .5rem 0; font-weight: 600; }
   input[type=file] { display: block; margin-top: .25rem; font-weight: normal; }
   button { font-size: 1rem; padding: .5rem 1rem; margin: .25rem .25rem .25rem 0; cursor: pointer; }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .75rem; }
   .card { border: 1px solid #ccc; border-radius: 8px; padding: .75rem; }
   .card .big { font-size: 1.3rem; font-weight: 700; }
+  .metric-card { margin: 0; align-self: start; }
+  .metric-card summary { position: relative; padding-right: 1rem; cursor: pointer; list-style: none; }
+  .metric-card summary::-webkit-details-marker { display: none; }
+  .metric-card summary::after { content: '+'; position: absolute; top: 0; right: 0; color: #64748b; font-size: 1rem; }
+  .metric-card[open] summary::after { content: '−'; }
+  .metric-card .metric-title, .metric-card .big, .metric-card .metric-sub { display: block; }
+  .metric-card .metric-title { color: #64748b; font-size: .9rem; font-weight: 500; }
+  .metric-card .metric-sub { margin-top: .2rem; color: #555; font-size: .9rem; }
+  .metric-card .metric-detail { margin-top: .6rem; }
   .card small { display: block; color: #555; margin-top: .25rem; }
   .scroll { overflow-x: auto; }
   /* overflow on the wrapper makes it the sticky container, so it must also scroll vertically */
@@ -32,13 +80,43 @@
   /* row background shows through the transparent part of the bar gradients in cells */
   #table tbody tr:hover { background: #fff7d1; }
   #table tbody tr.group:hover > *, #table tbody tr.sector:hover > * { background: #fff0b3; }
-  .view-toggle { border: none; padding: 0; margin: 1rem 0 .5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-  .view-toggle legend { float: left; font-weight: 600; margin-right: .5rem; }
-  .view-toggle label { display: inline-flex; gap: .3rem; margin: 0; font-weight: normal; }
-  .legend { font-size: .8rem; margin-bottom: .5rem; }
-  .legend div { margin: .2rem 0; }
-  .legend .key { display: inline-flex; align-items: center; gap: .3rem; margin-right: .9rem; white-space: nowrap; }
+  .table-toolbar { display: flex; align-items: center; justify-content: flex-start; gap: 1.5rem; margin: 1rem 0 .5rem; }
+  .sort-control { display: flex; align-items: center; gap: .45rem; flex: none; }
+  .sort-label { color: #435363; font-size: .8rem; font-weight: 600; }
+  .view-toggle { display: flex; gap: 2px; margin: 0; padding: 3px; border: 1px solid #c9d8e3; border-radius: 8px; background: #f1f6fa; }
+  .view-toggle label { position: relative; display: block; margin: 0; cursor: pointer; font-weight: 400; }
+  .view-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .view-toggle label span { display: block; padding: .35rem .65rem; border-radius: 5px; color: #35566e; font-size: .82rem; white-space: nowrap; }
+  .view-toggle input:checked + span { background: #fff; color: #005b8e; box-shadow: 0 1px 3px rgba(27,65,91,.18); font-weight: 600; }
+  .view-toggle input:focus-visible + span { outline: 2px solid #0072B2; outline-offset: 1px; }
+  .legend-button { margin: 0; padding: .35rem .65rem; border: 1px solid #c9d8e3; border-radius: 6px; background: #fff; color: #35566e; font-size: .82rem; }
+  .legend-button:hover, .legend-button:focus-visible { background: #f1f6fa; }
+  .legend-popup { position: fixed; z-index: 15; top: 6rem; right: 1rem; width: min(28rem, calc(100vw - 2rem)); max-height: min(65vh, 30rem); overflow: auto; border: 1px solid #c9d8e3; border-radius: 9px; background: #fff; box-shadow: 0 8px 26px rgba(20,40,60,.18); }
+  .legend-window-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .45rem .6rem; border-bottom: 1px solid #d5dfe7; background: #f1f6fa; cursor: grab; touch-action: none; user-select: none; }
+  .legend-window-head:active { cursor: grabbing; }
+  .legend-window-head button { margin: 0; padding: .1rem .45rem; border: 0; border-radius: 5px; background: transparent; color: #35566e; font-size: 1.15rem; }
+  .legend-window-head button:hover, .legend-window-head button:focus-visible { background: #e1ebf3; }
+  .legend-popup .legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; width: auto; max-width: none; min-width: 0; margin: 0; padding: .65rem .75rem; border: 0; border-radius: 0; background: #fff; }
+  .legend { box-sizing: border-box; flex: 0 1 760px; width: 100%; max-width: 760px; min-width: 0; margin: 0; padding: .4rem .6rem; border: 1px solid #d5dfe7; border-radius: 8px; background: #f8fafc; font-size: .8rem; }
+  .legend .legend-row { display: block; min-width: 0; margin: 0; }
+  .legend .legend-row > strong { display: block; margin-bottom: .35rem; }
+  .legend .legend-keys { display: flex; flex-direction: column; align-items: stretch; gap: .35rem; }
+  .legend .key { display: inline-flex; align-items: flex-start; gap: .3rem; margin: 0; white-space: normal; line-height: 1.25; }
+  .legend .key:last-child { margin-left: 0; }
   .legend .swatch { width: 5px; height: 1.1em; display: inline-block; }
+  @media (max-width: 480px) { .legend-popup .legend { grid-template-columns: 1fr; gap: .65rem; } }
+  @media (max-width: 900px) {
+    .table-toolbar { flex-direction: column; align-items: stretch; gap: .75rem; }
+    .sort-control { align-self: flex-start; }
+    .legend { align-self: flex-end; flex-basis: auto; width: min(760px, 100%); }
+  }
+  @media (max-width: 700px) {
+    .app-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+    .header-actions { display: contents; }
+    .app-nav { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+    .app-header #dropzone { grid-column: 2; grid-row: 1; justify-self: end; }
+  }
+  @media (max-width: 360px) { .import-full { display: none; } .import-short { display: inline; } }
   .chart-card { margin-top: 2rem; border: 1px solid #e3e6ea; border-radius: 12px; padding: 1rem 1rem .5rem; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
   .chart-card h2 { margin: 0 0 .25rem; }
   .chart-keys { font-size: .85rem; display: flex; gap: 1.25rem; flex-wrap: wrap; margin-bottom: .5rem; }
@@ -54,14 +132,27 @@
   tfoot td { font-weight: 700; border-top: 2px solid #999; }
   .pos { color: #0a6b2d; } .neg { color: #b00020; }
   .note { background: #f6f8fa; border-left: 4px solid #4a6fa5; padding: .5rem .75rem; }
+  .return-explainer { margin: .5rem 0 1rem; color: #5b6470; font-size: .8rem; }
+  .return-explainer summary { width: fit-content; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+  .return-explainer:not([open]) > .note { display: none; }
+  .return-explainer[open] summary { margin-bottom: .4rem; }
+  .return-explainer .note { color: #1a1a1a; font-size: .9rem; }
   .warn { background: #fff4e5; border-left: 4px solid #c77700; padding: .5rem .75rem; }
   .error { background: #fde8e8; border-left: 4px solid #b00020; padding: .5rem .75rem; }
   [hidden] { display: none !important; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .dropzone { display: block; border: 2px dashed #4a6fa5; border-radius: 10px; padding: 1.5rem; text-align: center; cursor: pointer; font-weight: normal; background: #f8faff; }
+  .dropzone { display: block; box-sizing: border-box; width: fit-content; max-width: 100%; margin: .5rem 0; border: 2px dashed #4a6fa5; border-radius: 8px; padding: .8rem 1.2rem; text-align: center; cursor: pointer; font-weight: 600; background: #f8faff; font-size: 1rem; line-height: 1.35; }
+  .app-header .dropzone { margin: 0; border-width: 1px; border-radius: 6px; padding: .35rem .6rem; background: #f8faff; font-size: .82rem; line-height: 1.2; white-space: nowrap; }
+  .import-short { display: none; }
   .dropzone:focus-within, .dropzone.over { background: #e3ecfa; outline: 3px solid #4a6fa5; }
-  .dropzone strong { font-size: 1.1rem; }
-  .loaded { list-style: none; padding: 0; } .loaded li { margin: .25rem 0; }
+  .dropzone strong { font-size: 1rem; }
+  .app-header .dropzone strong { font-size: inherit; }
+  #status:empty { display: none; }
+  #toast { position: fixed; z-index: 20; top: 1rem; left: 50%; transform: translateX(-50%); width: max-content; max-width: min(42rem, calc(100vw - 2rem));
+    padding: .8rem 1rem; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.2); background: #e8f4ec; border-left: 5px solid #23834b; pointer-events: none; }
+  #toast.warn { background: #fff4e5; border-color: #c77700; }
+  #toast.error { background: #fde8e8; border-color: #b00020; }
+  #toast button { float: right; margin: -.35rem -.5rem 0 .5rem; border: 0; background: transparent; padding: .25rem .5rem; pointer-events: auto; }
   .history { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
   .history li { display: flex; }
   .history button { margin: 0; text-align: left; border: 1px solid #4a6fa5; background: #fff; border-radius: 6px 0 0 6px; }
@@ -72,52 +163,87 @@
 </style>
 </head>
 <body>
-<h1>Portfolio returns (CHF)</h1>
+<header class="app-header" id="home">
+  <div class="brand"><img src="icon.svg" alt=""><h1>Portfolio tracker</h1></div>
+  <div class="header-actions">
+    <nav class="app-nav" aria-label="Main navigation">
+      <a class="home-link" href="#home">Home</a>
+      <details class="rate-menu" id="rateMenu">
+        <summary>Exchange rate</summary>
+        <div class="rate-menu-panel"><button type="button" id="currentRatesButton">Current rates</button></div>
+      </details>
+      <button class="nav-link" type="button" id="snapshotsButton">Snapshots</button>
+    </nav>
+    <label class="dropzone" id="dropzone">
+      <strong>Import CSVs</strong>
+      <input type="file" id="fileInput" class="sr-only" accept=".csv,text/csv" multiple>
+    </label>
+  </div>
+</header>
+<p id="status" role="status" aria-live="polite"></p>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<dialog id="ratesDialog" aria-labelledby="ratesTitle" aria-describedby="ratesMeta">
+  <div class="dialog-head">
+    <h2 id="ratesTitle">Current rates</h2>
+    <button id="closeRatesButton" type="button" aria-label="Close current rates">×</button>
+  </div>
+  <p id="ratesMeta"></p>
+  <table>
+    <thead><tr><th scope="col">Currency</th><th scope="col">Rate for 1 CHF</th></tr></thead>
+    <tbody id="ratesRows"></tbody>
+  </table>
+  <p id="ratesUnavailable" class="warn" hidden></p>
+</dialog>
 
-<section aria-labelledby="import-h">
-  <h2 id="import-h">1. Import DEGIRO CSV exports</h2>
-  <label class="dropzone" id="dropzone">
-    <strong>Drop both CSV files here</strong><br>
-    or tap to choose them (you can select both at once)<br>
-    <small>Account statement (from your first purchase) + Portfolio. The app recognises which is which.</small>
-    <input type="file" id="fileInput" class="sr-only" accept=".csv,text/csv" multiple>
-  </label>
-  <ul class="loaded" id="loaded"></ul>
-  <button id="calcBtn" disabled>Recalculate</button>
-  <p id="status" role="status" aria-live="polite"></p>
-</section>
-
-<section aria-labelledby="snap-h">
-  <h2 id="snap-h">History</h2>
-  <p><small>A snapshot is saved automatically each time you import files (one per day). Tap a date to view it.</small></p>
+<dialog id="snapshotsDialog" aria-labelledby="snapshotsTitle">
+  <div class="dialog-head">
+    <h2 id="snapshotsTitle">Snapshots</h2>
+    <button id="closeSnapshotsButton" type="button" aria-label="Close snapshots">×</button>
+  </div>
+  <p><small>Tap a date to view that snapshot.</small></p>
   <div id="snapshots"></div>
-  <details>
-    <summary>Backup / move history to another device</summary>
+  <section class="history-backup" aria-labelledby="history-backup-title">
+    <h3 id="history-backup-title">Backup / move history to another device</h3>
     <button id="exportBtn">Export history (JSON)</button>
     <label>Import history (JSON)
       <input type="file" id="importFile" accept=".json,application/json">
     </label>
-  </details>
-</section>
+  </section>
+</dialog>
 
 <section id="results" hidden aria-labelledby="results-h">
-  <h2 id="results-h">2. Results <span id="resultDate"></span></h2>
-  <p id="fxInfo"></p>
+  <h2 id="results-h">Portfolio</h2>
+  <p id="resultDate" class="snapshot-date" hidden></p>
   <div id="warnings"></div>
   <div class="cards" id="cards"></div>
-  <p class="note">
-    <strong>What "total return" includes:</strong> price gain (today's value + sale proceeds − purchase cost)
-    <strong>plus dividends and fund distributions</strong> (after withholding tax), <strong>minus trading fees</strong>.
-    Purchases and income are converted to CHF at the rate DEGIRO actually used; today's value uses today's ECB rate.
-    "Annualised" is the money-weighted yearly return (XIRR); it is not shown for holdings bought less than a year ago.
-  </p>
+  <details class="return-explainer">
+    <summary>Total returns...more</summary>
+    <p class="note">
+      <strong>What "total return" includes:</strong> price gain (today's value + sale proceeds − purchase cost)
+      <strong>plus dividends and fund distributions</strong> (after withholding tax), <strong>minus trading fees</strong>.
+      Purchases and income are converted to CHF at the rate DEGIRO actually used; today's value uses today's ECB rate.
+      "Annualised" is the money-weighted yearly return (XIRR); it is not shown for holdings bought less than a year ago.
+    </p>
+  </details>
   <button id="backBtn" hidden>Back to today's figures</button>
-  <fieldset class="view-toggle">
-    <legend>Order:</legend>
-    <label><input type="radio" name="groupMode" value="alpha"> Alphabetical</label>
-    <label><input type="radio" name="groupMode" value="sector"> By sector</label>
-  </fieldset>
-  <div class="legend" id="legend"></div>
+  <div class="table-toolbar">
+    <div class="sort-control">
+      <fieldset class="view-toggle" aria-label="Product order">
+        <legend class="sr-only">Product order</legend>
+        <label><input type="radio" name="groupMode" value="alpha"><span>Alphabetical</span></label>
+        <label><input type="radio" name="groupMode" value="sector"><span>By sector</span></label>
+        <label><input type="radio" name="groupMode" value="best"><span>Best performing</span></label>
+      </fieldset>
+    </div>
+    <button class="legend-button" type="button" id="showLegendButton" aria-controls="legendPopup" aria-expanded="false">Show legend</button>
+  </div>
+  <aside class="legend-popup" id="legendPopup" role="dialog" aria-modal="false" aria-labelledby="legendPopupTitle" hidden>
+    <div class="legend-window-head" id="legendDragHandle">
+      <strong id="legendPopupTitle">Sector legend</strong>
+      <button type="button" id="closeLegendButton" aria-label="Close legend">×</button>
+    </div>
+    <div class="legend" id="legend"><p>Import a portfolio to see its sector legend.</p></div>
+  </aside>
   <div class="table-wrap"><table id="table"></table></div>
   <div class="chart-card">
     <h2>Invested money vs portfolio value</h2>
@@ -132,6 +258,8 @@
 const $ = id => document.getElementById(id);
 const STORE = 'portfolioSnapshots';
 let current = null;
+let toastTimer;
+let lastRefreshDay = null;
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const chf = x => x == null ? '—' : x.toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -140,12 +268,61 @@ const sign = x => x == null ? '' : x >= 0 ? 'pos' : 'neg';
 const signed = (x, fmt) => `<span class="${sign(x)}">${x > 0 ? '+' : ''}${fmt(x)}</span>`;
 const day = t => new Date(t).toLocaleDateString('de-CH');
 
+function showToast(message, type = 'success') {
+  const toast = $('toast');
+  clearTimeout(toastTimer);
+  toast.className = type === 'success' ? '' : type;
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+  toast.innerHTML = `${esc(message).replace(/\n/g, '<br>')}<button type="button" aria-label="Dismiss notification">×</button>`;
+  toast.hidden = false;
+  toast.querySelector('button').addEventListener('click', () => { clearTimeout(toastTimer); toast.hidden = true; });
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 10000);
+}
+
+const localDayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const rateToastMessage = () => current?.todayRates
+  ? `Today's rates are in use (ECB data: ${current.todayRates.date}).`
+  : 'Live exchange rates are unavailable; using CHF values from the portfolio CSV.';
+
+function openRatesDialog() {
+  const rates = current?.todayRates;
+  const rows = $('ratesRows');
+  const unavailable = $('ratesUnavailable');
+  rows.innerHTML = '';
+  unavailable.hidden = !!rates;
+  if (rates) {
+    const retrieved = rates.retrievedAt
+      ? new Date(rates.retrievedAt).toLocaleString('de-CH', { dateStyle: 'medium', timeStyle: 'short' })
+      : 'Not recorded for this saved snapshot';
+    $('ratesMeta').textContent = `${viewing ? 'Rates saved with this snapshot' : 'Retrieved'}: ${retrieved}\nECB rate date: ${rates.date}`;
+    for (const currency of ['EUR', 'GBP', 'USD']) {
+      const tr = document.createElement('tr');
+      const name = document.createElement('td');
+      const value = document.createElement('td');
+      name.textContent = currency;
+      value.textContent = Number(rates[currency]).toLocaleString('de-CH', { minimumFractionDigits: 4, maximumFractionDigits: 5 });
+      tr.append(name, value);
+      rows.append(tr);
+    }
+  } else {
+    $('ratesMeta').textContent = 'No live rate data is available for this calculation.';
+    unavailable.textContent = loaded.statement && loaded.portfolio
+      ? 'Live rates were unavailable. Portfolio values use the CHF amounts from the imported portfolio CSV.'
+      : 'Import both DEGIRO CSV files to load exchange rates.';
+  }
+  $('ratesDialog').showModal();
+}
+
 async function fetchRates() {
   try {
     const res = await fetch('https://api.frankfurter.dev/v1/latest?base=CHF&symbols=EUR,GBP,USD');
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
-    return { ...data.rates, date: data.date };
+    return { ...data.rates, date: data.date, retrievedAt: new Date().toISOString() };
   } catch {
     return null;
   }
@@ -174,41 +351,70 @@ function loadText(name, text, savedAt) {
 
 async function handleFiles(files) {
   const errors = [];
+  const successes = [];
   for (const f of files) {
-    const text = await f.text();
-    const kind = loadText(f.name, text, Date.now());
-    if (!kind) { errors.push(`"${f.name}" is not a DEGIRO account statement or portfolio CSV.`); continue; }
-    idb('readwrite', s => s.put({ name: f.name, text, savedAt: loaded[kind].savedAt }, kind))
-      .catch(() => { $('status').innerHTML = '<span class="error">Could not store the file on this device; you will need to import it again next time.</span>'; });
+    try {
+      const text = await f.text();
+      const kind = loadText(f.name, text, Date.now());
+      if (!kind) { errors.push(`Could not load "${f.name}": it is not a DEGIRO statement or portfolio CSV.`); continue; }
+      try {
+        await idb('readwrite', s => s.put({ name: f.name, text, savedAt: loaded[kind].savedAt }, kind));
+      } catch {
+        errors.push(`Loaded "${f.name}" for this session, but could not save it on this device.`);
+      }
+      successes.push(describeFile(kind));
+    } catch (e) {
+      errors.push(`Could not read "${f.name}": ${e.message}`);
+    }
   }
-  renderLoaded();
-  $('status').innerHTML = errors.map(e => `<span class="error">${esc(e)}</span>`).join('<br>');
-  if (loaded.statement && loaded.portfolio && !errors.length) calculate(true);
+  if (loaded.statement && loaded.portfolio && !errors.length) {
+    if (await calculate(true)) {
+      lastRefreshDay = current?.todayRates ? localDayKey() : null;
+      showToast(`Loaded successfully:\n${successes.join('\n')}\n${rateToastMessage()}`, current?.todayRates ? 'success' : 'warn');
+    }
+  } else {
+    const waiting = loaded.statement && !loaded.portfolio ? 'Waiting for the portfolio CSV.'
+      : loaded.portfolio && !loaded.statement ? 'Waiting for the account statement CSV.' : '';
+    showToast([...successes.map(s => `Loaded: ${s}`), ...errors, waiting].filter(Boolean).join('\n'), errors.length ? 'warn' : 'success');
+  }
 }
 
 async function restoreFiles() {
+  const restored = [];
+  const errors = [];
   try {
     for (const kind of ['statement', 'portfolio']) {
       const f = await idb('readonly', s => s.get(kind));
-      if (f) loadText(f.name, f.text, f.savedAt);
+      if (!f) continue;
+      if (loadText(f.name, f.text, f.savedAt) === kind) restored.push(describeFile(kind));
+      else errors.push(`The saved ${kind} file "${f.name}" could not be read as a valid DEGIRO CSV.`);
     }
-  } catch { return; }
-  renderLoaded();
-  if (loaded.statement && loaded.portfolio) calculate();
+  } catch (e) {
+    showToast(`Could not restore saved files: ${e.message}`, 'error');
+    return;
+  }
+  if (loaded.statement && loaded.portfolio) {
+    if (await calculate()) {
+      lastRefreshDay = current?.todayRates ? localDayKey() : null;
+      showToast([`Restored saved files:\n${restored.join('\n')}`, rateToastMessage(), ...errors].join('\n'), errors.length ? 'warn' : 'success');
+    }
+  } else if (restored.length || errors.length) {
+    const missing = ['statement', 'portfolio'].filter(k => !loaded[k]).map(k => `No saved ${k} file.`);
+    showToast([...restored.map(f => `Restored: ${f}`), ...missing, ...errors].join('\n'), errors.length ? 'warn' : 'success');
+  }
 }
 
-function renderLoaded() {
-  const s = loaded.statement, p = loaded.portfolio;
-  const range = s && s.rows.length ? `${day(Math.min(...s.rows.map(r => r.t)))} – ${day(Math.max(...s.rows.map(r => r.t)))}` : '';
-  const imported = f => f.savedAt ? `, imported ${day(f.savedAt)}` : '';
-  $('loaded').innerHTML = `
-    <li>${s ? `✓ Account statement: <strong>${esc(s.name)}</strong> (${range}${imported(s)})` : '✗ Account statement: not loaded yet'}</li>
-    <li>${p ? `✓ Portfolio: <strong>${esc(p.name)}</strong> (${p.data.holdings.length} holdings${imported(p)})` : '✗ Portfolio: not loaded yet'}</li>`;
-  $('calcBtn').disabled = !(s && p);
+function describeFile(kind) {
+  const f = loaded[kind];
+  if (kind === 'statement') {
+    const range = f.rows.length ? `${day(Math.min(...f.rows.map(r => r.t)))} – ${day(Math.max(...f.rows.map(r => r.t)))}` : 'no transactions';
+    return `Account statement: ${f.name} (${range})`;
+  }
+  return `Portfolio: ${f.name} (${f.data.holdings.length} holdings)`;
 }
 
 async function calculate(saveSnapshot) {
-  if (!loaded.statement || !loaded.portfolio) return;
+  if (!loaded.statement || !loaded.portfolio) return false;
   $('status').textContent = 'Calculating…';
   try {
     const rates = await fetchRates();
@@ -219,30 +425,51 @@ async function calculate(saveSnapshot) {
     }
     render(current);
     $('status').textContent = '';
+    return true;
   } catch (e) {
     $('status').innerHTML = `<span class="error">${esc(e.message)}</span>`;
+    showToast(`Calculation failed: ${e.message}`, 'error');
+    return false;
   }
+}
+
+async function refreshForDay() {
+  if (document.visibilityState === 'hidden' || !loaded.statement || !loaded.portfolio) return;
+  const today = localDayKey();
+  if (today === lastRefreshDay) return;
+  if (await calculate()) {
+    lastRefreshDay = current?.todayRates ? today : null;
+    showToast(rateToastMessage(), current?.todayRates ? 'success' : 'warn');
+  }
+}
+
+let dailyRefreshTimer;
+function scheduleDailyRefresh() {
+  clearTimeout(dailyRefreshTimer);
+  const next = new Date();
+  next.setHours(24, 0, 1, 0);
+  dailyRefreshTimer = setTimeout(async () => {
+    await refreshForDay();
+    scheduleDailyRefresh();
+  }, next.getTime() - Date.now());
 }
 
 function render(r, isSnapshot) {
   const s = r.summary;
   $('results').hidden = false;
-  $('resultDate').textContent = isSnapshot ? `— snapshot from ${day(r.date)}` : `(${day(r.date)})`;
+  $('resultDate').hidden = !isSnapshot;
+  $('resultDate').textContent = isSnapshot ? `Snapshot from ${day(r.date)}` : '';
   $('backBtn').hidden = !isSnapshot || !loaded.statement || !loaded.portfolio;
   viewing = isSnapshot ? r.date : null;
   renderSnapshots();
-  $('fxInfo').textContent = r.todayRates
-    ? `Today's rates (ECB, ${r.todayRates.date}): 1 CHF = ${r.todayRates.EUR} EUR, ${r.todayRates.GBP} GBP, ${r.todayRates.USD} USD.`
-    : 'Could not load today\'s exchange rates (offline?). Using the CHF values from the DEGIRO portfolio file instead.';
   $('warnings').innerHTML = r.warnings.map(w => `<p class="warn">${esc(w)}</p>`).join('');
 
   $('cards').innerHTML = `
-    <div class="card">Value today<div class="big">${chf(s.value)} CHF</div><small>+ ${chf(s.cashChf)} CHF cash (not included in returns)</small></div>
-    <div class="card">Invested (purchases)<div class="big">${chf(s.bought)} CHF</div><small>${chf(s.sold)} CHF received from sales</small></div>
-    <div class="card">Total return<div class="big">${signed(s.totalReturn, chf)} CHF</div><small>${signed(s.totalReturnPct, pct)} of money invested</small></div>
-    <div class="card">Annualised return<div class="big">${signed(s.annualised, pct)}</div><small>Money-weighted, whole portfolio</small></div>
-    <div class="card">Breakdown<small>Price gain: ${signed(s.priceGain, chf)} CHF</small><small>Dividends after tax: ${signed(s.dividends, chf)} CHF</small><small>Fund distributions: ${signed(s.distributions, chf)} CHF</small><small>Trading fees: ${signed(-s.fees, chf)} CHF</small></div>
-    <div class="card">Spent on trading<div class="big">${chf(s.tradeFees)} CHF</div><small>Transaction fees, stamp duty, ADR fees</small><small>+ ${chf(s.connectionFees)} CHF yearly exchange connection fees (not tied to a product, not in returns)</small></div>`;
+    <details class="card metric-card"><summary><span class="metric-title">Value today</span><span class="big">${chf(s.value)} CHF</span></summary><small class="metric-detail">+ ${chf(s.cashChf)} CHF cash (not included in returns)</small></details>
+    <details class="card metric-card"><summary><span class="metric-title">Invested (purchases)</span><span class="big">${chf(s.bought)} CHF</span></summary><small class="metric-detail">${chf(s.sold)} CHF received from sales</small></details>
+    <details class="card metric-card"><summary><span class="metric-title">Total return</span><span class="big">${signed(s.totalReturn, chf)} CHF</span><span class="metric-sub">${signed(s.totalReturnPct, pct)} of money invested</span></summary><small class="metric-detail">Price gain: ${signed(s.priceGain, chf)} CHF</small><small>Dividends after tax: ${signed(s.dividends, chf)} CHF</small><small>Fund distributions: ${signed(s.distributions, chf)} CHF</small><small>Transaction/third-party fees, stamp duty and ADR fees: ${signed(-s.tradeFees, chf)} CHF (included in return)</small><small>Exchange connection fees: ${chf(s.connectionFees)} CHF (not included in returns)</small></details>
+    <details class="card metric-card"><summary><span class="metric-title">Annualised return</span><span class="big">${signed(s.annualised, pct)}</span></summary><small class="metric-detail">Money-weighted return for the whole portfolio, calculated with XIRR.</small></details>
+    `;
 
   const head = `<thead><tr><th scope="col">Product</th><th scope="col">Annualised</th><th scope="col">Type</th><th scope="col">Units</th><th scope="col">First buy</th>
     <th scope="col">Invested</th><th scope="col">Sold for</th><th scope="col">Value today</th><th scope="col">Price gain</th>
@@ -281,11 +508,19 @@ function render(r, isSnapshot) {
       <td>${signed(sum('priceGain'), chf)}</td><td>${chf(sum('dividends'))}</td><td>${chf(sum('distributions'))}</td><td>${chf(sum('fees'))}</td>
       <td>${signed(sum('totalReturn'), chf)}</td><td>${signed(invested ? sum('totalReturn') / invested : null, pct)}</td></tr>`;
   };
-  const bySector = groupMode() === 'sector';
+  const mode = groupMode();
+  const bySector = mode === 'sector';
+  const byPerformance = (a, b) => {
+    if (a.held !== b.held) return a.held ? -1 : 1;
+    if (a.annualised == null && b.annualised == null) return a.name.localeCompare(b.name);
+    if (a.annualised == null) return 1;
+    if (b.annualised == null) return -1;
+    return b.annualised - a.annualised || a.name.localeCompare(b.name);
+  };
   let body = '';
   const usedSectors = { shares: new Set(), funds: new Set() };
   for (const [type, label, key] of [['Share', 'Shares', 'shares'], ['Fund', 'Funds', 'funds']]) {
-    const items = r.products.filter(p => p.type === type).sort((a, b) => a.name.localeCompare(b.name));
+    const items = r.products.filter(p => p.type === type).sort(mode === 'best' ? byPerformance : (a, b) => a.name.localeCompare(b.name));
     if (!items.length) continue;
     items.forEach(p => usedSectors[key].add(Calc.sectorOf(p.isin, p.type)));
     body += groupRow(label, items, 'group', null, s.value, 'portfolio');
@@ -298,8 +533,8 @@ function render(r, isSnapshot) {
   }
   const keys = (list, set) => [...list, Calc.UNASSIGNED].filter(x => set.has(x))
     .map(x => `<span class="key"><span class="swatch" style="background:${x.color}"></span>${esc(x.name)}</span>`).join('');
-  $('legend').innerHTML = `<div><strong>Shares:</strong> ${keys(Calc.SECTORS.shares, usedSectors.shares)}</div>
-    <div><strong>Funds:</strong> ${keys(Calc.SECTORS.funds, usedSectors.funds)}</div>`;
+  $('legend').innerHTML = `<div class="legend-row"><strong>Shares:</strong><span class="legend-keys">${keys(Calc.SECTORS.shares, usedSectors.shares)}</span></div>
+    <div class="legend-row"><strong>Funds:</strong><span class="legend-keys">${keys(Calc.SECTORS.funds, usedSectors.funds)}</span></div>`;
   $('table').innerHTML = `<caption class="sr-only">Return per product, all amounts in CHF</caption>${head}<tbody>${body}</tbody>${foot}`;
   renderChart(r);
 }
@@ -424,11 +659,66 @@ $('snapshots').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn) return;
   const list = loadSnapshots();
-  if (btn.dataset.view) { current = list[+btn.dataset.view]; render(current, true); $('results').scrollIntoView(); }
+  if (btn.dataset.view) {
+    current = list[+btn.dataset.view];
+    render(current, true);
+    $('snapshotsDialog').close();
+    $('results').scrollIntoView();
+  }
   if (btn.dataset.del && confirm(`Delete the snapshot from ${day(list[+btn.dataset.del].date)}?`)) { list.splice(+btn.dataset.del, 1); storeSnapshots(list); }
 });
-$('calcBtn').addEventListener('click', () => calculate());
-$('backBtn').addEventListener('click', () => calculate());
+$('showLegendButton').addEventListener('click', () => {
+  $('legendPopup').hidden = false;
+  $('showLegendButton').setAttribute('aria-expanded', 'true');
+  $('closeLegendButton').focus();
+});
+function closeLegendPopup() {
+  if ($('legendPopup').hidden) return;
+  $('legendPopup').hidden = true;
+  $('showLegendButton').setAttribute('aria-expanded', 'false');
+  $('showLegendButton').focus();
+}
+$('closeLegendButton').addEventListener('click', closeLegendPopup);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLegendPopup(); });
+
+let legendDrag = null;
+const legendHandle = $('legendDragHandle');
+legendHandle.addEventListener('pointerdown', e => {
+  if (e.target.closest('button')) return;
+  const rect = $('legendPopup').getBoundingClientRect();
+  $('legendPopup').style.left = `${rect.left}px`;
+  $('legendPopup').style.top = `${rect.top}px`;
+  $('legendPopup').style.right = 'auto';
+  legendDrag = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
+  legendHandle.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+legendHandle.addEventListener('pointermove', e => {
+  if (!legendDrag || legendDrag.pointerId !== e.pointerId) return;
+  const rect = $('legendPopup').getBoundingClientRect();
+  const left = Math.max(8, Math.min(innerWidth - rect.width - 8, legendDrag.left + e.clientX - legendDrag.x));
+  const top = Math.max(8, Math.min(innerHeight - rect.height - 8, legendDrag.top + e.clientY - legendDrag.y));
+  $('legendPopup').style.left = `${left}px`;
+  $('legendPopup').style.top = `${top}px`;
+});
+const endLegendDrag = () => { legendDrag = null; };
+legendHandle.addEventListener('pointerup', endLegendDrag);
+legendHandle.addEventListener('pointercancel', endLegendDrag);
+$('snapshotsButton').addEventListener('click', () => $('snapshotsDialog').showModal());
+$('closeSnapshotsButton').addEventListener('click', () => $('snapshotsDialog').close());
+$('snapshotsDialog').addEventListener('click', e => { if (e.target === $('snapshotsDialog')) $('snapshotsDialog').close(); });
+$('backBtn').addEventListener('click', async () => {
+  if (await calculate()) showToast(rateToastMessage(), current?.todayRates ? 'success' : 'warn');
+});
+$('currentRatesButton').addEventListener('click', () => {
+  $('rateMenu').open = false;
+  openRatesDialog();
+});
+$('closeRatesButton').addEventListener('click', () => $('ratesDialog').close());
+$('ratesDialog').addEventListener('click', e => { if (e.target === $('ratesDialog')) $('ratesDialog').close(); });
+document.addEventListener('click', e => { if (!$('rateMenu').contains(e.target)) $('rateMenu').open = false; });
+document.addEventListener('visibilitychange', refreshForDay);
+window.addEventListener('online', () => { if (!current?.todayRates) refreshForDay(); });
 $('fileInput').addEventListener('change', e => { handleFiles([...e.target.files]); e.target.value = ''; });
 // Accept drops anywhere on the page so a missed drop doesn't make the browser open the CSV
 window.addEventListener('dragover', e => { e.preventDefault(); $('dropzone').classList.add('over'); });
@@ -460,8 +750,8 @@ $('importFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 renderSnapshots();
-renderLoaded();
 restoreFiles();
+scheduleDailyRefresh();
 // Service workers only run over http(s), not when opened as a local file
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js');
 </script>
