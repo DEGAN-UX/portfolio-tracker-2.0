@@ -40,6 +40,8 @@ Shows total and annualised return (in CHF) per share/fund from DEGIRO CSV export
 - `samples/transactions.csv` now starts 30-06-2022 (account opening); all 27 holdings reconcile. An earlier export started 03-01-2023 and missed 8 SMI ETF shares — DEGIRO's default export range may not cover full history.
 
 ## Dependencies
+- Hosting: GitHub Pages, https://degan-ux.github.io/portfolio-tracker-2.0/ (repo DEGAN-UX/portfolio-tracker-2.0, public; only app files pushed — `samples/` is gitignored).
+- Installable PWA: `manifest.webmanifest`, `sw.js` (network-first, cache fallback for offline; bump `CACHE` name if file list changes), icons `icon.svg` → `icon-192.png`/`icon-512.png` (rendered with puppeteer-core). SW only registers over http(s), not `file://`. VS Code's integrated browser doesn't run service workers — test PWA in real Chrome.
 - App: none. Internet only for today's FX (`https://api.frankfurter.dev/v1/latest?base=CHF`, CORS `*`; old api.frankfurter.app redirects).
 - PoC: Node 18+, Google Chrome, `puppeteer-core`.
 

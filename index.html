@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Portfolio returns</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0072B2">
 <style>
   body { font-family: system-ui, sans-serif; margin: 0 auto; padding: 1rem; max-width: 1400px; color: #1a1a1a; }
   h1 { font-size: 1.4rem; } h2 { font-size: 1.15rem; margin-top: 2rem; }
@@ -458,6 +462,8 @@ $('importFile').addEventListener('change', async e => {
 renderSnapshots();
 renderLoaded();
 restoreFiles();
+// Service workers only run over http(s), not when opened as a local file
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>
